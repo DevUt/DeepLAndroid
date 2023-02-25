@@ -33,3 +33,14 @@ jobs:
         with:
           name: apk-release.apk
           path: ${{env.SIGNED_RELEASE_FILE}}
+      - name: Generate changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@c3f61b2a3db543ceee83c759ac8e48419a1a2211
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.14
+        with:
+          files: ${{env.signedReleaseFile}}
+          body: ${{ steps.changelog.outputs.changelog }}
