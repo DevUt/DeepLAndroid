@@ -2,7 +2,7 @@ name: APK Build
 on: 
   push:
     branches:
-      - master
+      - android-13 
 
   pull_request:
   workflow_dispatch:
@@ -13,13 +13,23 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
+      - name: Make gradelw executable
+        run: chmod +x ./gradlew
       - name: Build the app
-        run: |
-          chmod +x gradlew
-          ./gradlew build --stacktrace
-      - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: sparkfabrik/android-build-action@v1.3.4
         with:
-          name: debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          project-path: .
+          gradle-task: assembleRelease
+      - name: Sign apk
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "30.0.2"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: apk-release.apk
+          path: ${{env.SIGNED_RELEASE_FILE}}
